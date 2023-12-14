@@ -1,5 +1,5 @@
 _base_ = ['../_base_/default_runtime.py', '../_base_/datasets/exdark_yolo.py']
-load_from = 'https://download.openmmlab.com/mmdetection/v2.0/yolo/yolov3_d53_mstrain-608_273e_coco/yolov3_d53_mstrain-608_273e_coco_20210518_115020-a2c3acb8.pth'
+#load_from = 'https://download.openmmlab.com/mmdetection/v2.0/yolo/yolov3_d53_mstrain-608_273e_coco/yolov3_d53_mstrain-608_273e_coco_20210518_115020-a2c3acb8.pth'
 
 model = dict(
     type='IAT_YOLOV3',
@@ -70,7 +70,7 @@ lr_config = dict(
     warmup_ratio=0.1,
     step=[18, 23])
 # runtime settings
-total_epochs = 25
+total_epochs = 25*20
 evaluation = dict(interval=1, metric=['mAP'])
 
 

@@ -12,6 +12,8 @@ from .res_layer import ResLayer, SimplifiedBasicBlock
 from .se_layer import SELayer
 from .transformer import (DetrTransformerDecoder, DetrTransformerDecoderLayer,
                           DynamicConv, Transformer)
+from .transformer_raw import (TRANSFORMER)
+from .deformable_transformer_raw import (TRANSFORMER)
 
 __all__ = [
     'ResLayer', 'gaussian_radius', 'gen_gaussian_target',

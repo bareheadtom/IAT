@@ -78,6 +78,7 @@ mmdet/.mim/configs/_base_/models/ssd300.py
 mmdet/.mim/configs/_base_/schedules/schedule_1x.py
 mmdet/.mim/configs/_base_/schedules/schedule_20e.py
 mmdet/.mim/configs/_base_/schedules/schedule_2x.py
+mmdet/.mim/configs/detr/detr_ed_LOL.py
 mmdet/.mim/configs/detr/detr_exdark.py
 mmdet/.mim/configs/detr/detr_ours_LOL.py
 mmdet/.mim/configs/detr/detr_ours_MIT5k.py
@@ -413,6 +414,7 @@ mmdet/models/utils/positional_encoding.py
 mmdet/models/utils/res_layer.py
 mmdet/models/utils/se_layer.py
 mmdet/models/utils/transformer.py
+mmdet/models/utils/transformer_raw.py
 mmdet/utils/__init__.py
 mmdet/utils/collect_env.py
 mmdet/utils/contextmanagers.py
