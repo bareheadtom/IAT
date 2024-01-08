@@ -14,6 +14,8 @@ class EvalHook(BaseEvalHook):
             return
 
         from mmdet.apis import single_gpu_test
+        print("\n*****************single_gpu_test")
+        #print("runner.model",runner.model,"self.dataloader",self.dataloader)
         results = single_gpu_test(runner.model, self.dataloader, show=False)
         runner.log_buffer.output['eval_iter_num'] = len(self.dataloader)
         key_score = self.evaluate(runner, results)

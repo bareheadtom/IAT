@@ -54,6 +54,7 @@ class ExdarkDataset(CustomDataset):
         
 
     def load_annotations(self, ann_file):
+        #print("suun load_annotations")
         """Load annotation from XML style ann_file.
         Args:
             ann_file (str): Path of XML file. (txt format)
@@ -63,12 +64,14 @@ class ExdarkDataset(CustomDataset):
 
         data_infos = []
         img_ids = mmcv.list_from_file(ann_file)
+        #print(" mmcv.list_from_file img_ids",img_ids)
         for img_id in img_ids:
             # print('0000', self.img_prefix)
             # print('1111', img_id)
             filename = img_id
             xml_path = osp.join(self.img_prefix.replace('JPEGImages/IMGS','Annotations/LABLE'),
                                 f'{img_id}.xml')
+            #print("xml_path",xml_path)
             # print(xml_path)
             tree = ET.parse(xml_path)
             root = tree.getroot()
@@ -223,6 +226,31 @@ class ExdarkDataset(CustomDataset):
         Returns:
             dict[str, float]: AP/recall metrics.
         """
+        # (0, 5)
+        # (0, 5)
+        # (0, 5)
+        # (34, 5)
+        # (0, 5)
+        # (0, 5)
+        # (0, 5)
+        # (0, 5)
+        # (2, 5)
+        # (46, 5)
+        # (18, 5)
+        # (0, 5)
+
+        #metric ['mAP'] proposal_nums (100, 300, 1000) iou_thr 0.5 scale_ranges None
+        print("********************results")
+        # for result in results:
+        #     print("result",type(result))
+        # print("results,metric,proposal_nums,iou_thr,scale_ranges")
+        # print("lenresults",len(results))
+        # for ret in results:
+        #     print("\n")
+        #     for re in ret:
+        #         print(re.shape)
+        # print("metric",metric,"proposal_nums",proposal_nums,"iou_thr",iou_thr,"scale_ranges",scale_ranges)
+        
 
         if not isinstance(metric, str):
             assert len(metric) == 1
@@ -260,6 +288,8 @@ class ExdarkDataset(CustomDataset):
                 ar = recalls.mean(axis=1)
                 for i, num in enumerate(proposal_nums):
                     eval_results[f'AR@{num}'] = ar[i]
+        print("\n***********eval_results",eval_results)
+        #eval_results OrderedDict([('AP50', 0.0), ('mAP', 4.8468849854543805e-05)])
         return eval_results
 
 

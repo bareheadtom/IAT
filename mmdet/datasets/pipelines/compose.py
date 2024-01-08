@@ -35,9 +35,10 @@ class Compose:
         Returns:
            dict: Transformed data.
         """
-
+        #print(" \n******************Composetransform",data)
         for t in self.transforms:
             data = t(data)
+            #print("\n",type(t).__name__, data)
             if data is None:
                 return None
         return data

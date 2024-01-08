@@ -2,3 +2,5 @@
 LOL_pretrain.pth
 MIT_5K.pth
 nohup.out
+*.pyc
+__pycache__/

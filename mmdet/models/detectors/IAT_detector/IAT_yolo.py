@@ -23,7 +23,8 @@ class IAT_YOLOV3(SingleStageDetector):
 
         def extract_feat(self, img):
             """Directly extract features from the backbone+neck."""
-            _, _, x = self.pre_encoder(img)
+            #_, _, x = self.pre_encoder(img)
+            x = img
             x = self.backbone(x)
             if self.with_neck:
                 x = self.neck(x)

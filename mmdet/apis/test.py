@@ -28,8 +28,11 @@ def single_gpu_test(model,
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
         #print(i)
+        #print("\ntest data",data)
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
+        #print("\n**data",**data)
+        #print("\n**result",result)
 
         batch_size = len(result)
         if show or out_dir:
@@ -73,6 +76,8 @@ def single_gpu_test(model,
 
         for _ in range(batch_size):
             prog_bar.update()
+    
+    
     return results
 
 

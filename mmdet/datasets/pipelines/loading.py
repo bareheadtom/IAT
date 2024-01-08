@@ -241,6 +241,7 @@ class LoadAnnotations:
         Returns:
             dict: The dict contains loaded bounding box annotations.
         """
+        #print("_load_bboxes",results)
 
         ann_info = results['ann_info']
         results['gt_bboxes'] = ann_info['bboxes'].copy()

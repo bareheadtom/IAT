@@ -307,6 +307,9 @@ def eval_map(det_results,
     Returns:
         tuple: (mAP, [dict, dict, ...])
     """
+    print("image0,det_results",det_results[0])
+    print("image0,annotation",annotations[0])
+
     assert len(det_results) == len(annotations)
 
     num_imgs = len(det_results)

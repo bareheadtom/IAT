@@ -118,6 +118,8 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
                 augs (multiscale, flip, etc.) and the inner list indicates
                 images in a batch.
         """
+        #print("\nforward_test img_metas","imgs",imgs,"img_metas",img_metas)
+        #img_metas = img_metas[0].data
         for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
             if not isinstance(var, list):
                 raise TypeError(f'{name} must be a list, but got {type(var)}')
@@ -132,6 +134,7 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
         # then used for the transformer_head.
         for img, img_meta in zip(imgs, img_metas):
             batch_size = len(img_meta)
+            #print("\nimg_meta",img_meta,"batch_size",batch_size)
             for img_id in range(batch_size):
                 img_meta[img_id]['batch_input_shape'] = tuple(img.size()[-2:])
 
@@ -143,6 +146,7 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
             # proposals.
             if 'proposals' in kwargs:
                 kwargs['proposals'] = kwargs['proposals'][0]
+            #print("simple_test,",imgs[0],"img_metas[0]",img_metas[0])
             return self.simple_test(imgs[0], img_metas[0], **kwargs)
         else:
             assert imgs[0].size(0) == 1, 'aug test does not support ' \
@@ -163,6 +167,7 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
         should be double nested (i.e.  List[Tensor], List[List[dict]]), with
         the outer list indicating test time augmentations.
         """
+        #print("\n********total forward","img",img,"img_metas",img_metas)
         if torch.onnx.is_in_onnx_export():
             assert len(img_metas) == 1
             return self.onnx_export(img[0], img_metas[0])

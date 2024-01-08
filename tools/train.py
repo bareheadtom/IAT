@@ -4,6 +4,8 @@ import os
 import os.path as osp
 import time
 import warnings
+import sys
+sys.path.append('/root/autodl-fs/projects/Illumination-Adaptive-Transformer/IAT_high/IAT_mmdetection/')
 
 import mmcv
 import torch
@@ -17,10 +19,12 @@ from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 from mmdet.utils import collect_env, get_root_logger
 
+# python tools/train.py --resume-from /root/autodl-tmp/outputs/IAT/20231229151040_not_IAT/epoch_42.pth
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
-    parser.add_argument('config', help='train config file path')
+    parser.add_argument('--config',default='/root/autodl-fs/projects/Illumination-Adaptive-Transformer/IAT_high/IAT_mmdetection/configs/detr/detr_ours_LOL.py', help='train config file path')
+    #parser.add_argument('--config',default='/root/autodl-fs/projects/Illumination-Adaptive-Transformer/IAT_high/IAT_mmdetection/configs/yolo/yolov3_IAT_lol.py', help='train config file path')
     parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
@@ -85,8 +89,9 @@ def parse_args():
 import datetime
 def main():
     args = parse_args()
-    args.work_dir = "/root/autodl-tmp/outputs/"+str(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+    args.work_dir = "/root/autodl-tmp/outputs/IAT/"+str(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))+"_not_IAT"
     print("args", args)
+    print("detr not use pre_encoder")
     # args Namespace(cfg_options=None, config='configs/detr/detr_ours_LOL.py', deterministic=False, gpu_ids=None, gpus=None, 
     #                launcher='none', local_rank=0, no_validate=False, options=None, resume_from=None, seed=None, 
     #                work_dir='/root/autodl-tmp/outputs/20231208104502')
@@ -128,7 +133,74 @@ def main():
         cfg.gpu_ids = range(world_size)
     
     print("cfg",cfg)
-    #cfg Config (path: configs/detr/detr_ours_LOL.py): 
+    
+    # create work_dir
+    mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
+    # dump config
+    cfg.dump(osp.join(cfg.work_dir, osp.basename(args.config)))
+    # init the logger before other steps
+    timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
+    log_file = osp.join(cfg.work_dir, f'{timestamp}.log')
+    logger = get_root_logger(log_file=log_file, log_level=cfg.log_level)
+
+    # init the meta dict to record some important information such as
+    # environment info and seed, which will be logged
+    meta = dict()
+    # log env info
+    env_info_dict = collect_env()
+    env_info = '\n'.join([(f'{k}: {v}') for k, v in env_info_dict.items()])
+    dash_line = '-' * 60 + '\n'
+    logger.info('Environment info:\n' + dash_line + env_info + '\n' +
+                dash_line)
+    meta['env_info'] = env_info
+    meta['config'] = cfg.pretty_text
+    # log some basic info
+    logger.info(f'Distributed training: {distributed}')
+    logger.info(f'Config:\n{cfg.pretty_text}')
+
+    # set random seeds
+    if args.seed is not None:
+        logger.info(f'Set random seed to {args.seed}, '
+                    f'deterministic: {args.deterministic}')
+        set_random_seed(args.seed, deterministic=args.deterministic)
+    cfg.seed = args.seed
+    meta['seed'] = args.seed
+    meta['exp_name'] = osp.basename(args.config)
+
+
+    model = build_detector(
+        cfg.model,
+        train_cfg=cfg.get('train_cfg'),
+        test_cfg=cfg.get('test_cfg'))
+    model.init_weights()
+
+    datasets = [build_dataset(cfg.data.train)]
+    if len(cfg.workflow) == 2:
+        val_dataset = copy.deepcopy(cfg.data.val)
+        val_dataset.pipeline = cfg.data.train.pipeline
+        datasets.append(build_dataset(val_dataset))
+    if cfg.checkpoint_config is not None:
+        # save mmdet version, config file content and class names in
+        # checkpoints as meta data
+        cfg.checkpoint_config.meta = dict(
+            mmdet_version=__version__ + get_git_hash()[:7],
+            CLASSES=datasets[0].CLASSES)
+    # add an attribute for visualization convenience
+    model.CLASSES = datasets[0].CLASSES
+    train_detector(
+        model,
+        datasets,
+        cfg,
+        distributed=distributed,
+        validate=(not args.no_validate),
+        timestamp=timestamp,
+        meta=meta)
+
+
+if __name__ == '__main__':
+    main()
+
+#cfg Config (path: configs/detr/detr_ours_LOL.py): 
     #     {
     # 	'checkpoint_config': {
     # 		'interval': 1
@@ -500,67 +572,3 @@ def main():
     # 	'work_dir': '/root/autodl-tmp/outputs/20231208104709',
     # 	'gpu_ids': range(0, 1)
     # }
-    # create work_dir
-    mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
-    # dump config
-    cfg.dump(osp.join(cfg.work_dir, osp.basename(args.config)))
-    # init the logger before other steps
-    timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
-    log_file = osp.join(cfg.work_dir, f'{timestamp}.log')
-    logger = get_root_logger(log_file=log_file, log_level=cfg.log_level)
-
-    # init the meta dict to record some important information such as
-    # environment info and seed, which will be logged
-    meta = dict()
-    # log env info
-    env_info_dict = collect_env()
-    env_info = '\n'.join([(f'{k}: {v}') for k, v in env_info_dict.items()])
-    dash_line = '-' * 60 + '\n'
-    logger.info('Environment info:\n' + dash_line + env_info + '\n' +
-                dash_line)
-    meta['env_info'] = env_info
-    meta['config'] = cfg.pretty_text
-    # log some basic info
-    logger.info(f'Distributed training: {distributed}')
-    logger.info(f'Config:\n{cfg.pretty_text}')
-
-    # set random seeds
-    if args.seed is not None:
-        logger.info(f'Set random seed to {args.seed}, '
-                    f'deterministic: {args.deterministic}')
-        set_random_seed(args.seed, deterministic=args.deterministic)
-    cfg.seed = args.seed
-    meta['seed'] = args.seed
-    meta['exp_name'] = osp.basename(args.config)
-
-    model = build_detector(
-        cfg.model,
-        train_cfg=cfg.get('train_cfg'),
-        test_cfg=cfg.get('test_cfg'))
-    model.init_weights()
-
-    datasets = [build_dataset(cfg.data.train)]
-    if len(cfg.workflow) == 2:
-        val_dataset = copy.deepcopy(cfg.data.val)
-        val_dataset.pipeline = cfg.data.train.pipeline
-        datasets.append(build_dataset(val_dataset))
-    if cfg.checkpoint_config is not None:
-        # save mmdet version, config file content and class names in
-        # checkpoints as meta data
-        cfg.checkpoint_config.meta = dict(
-            mmdet_version=__version__ + get_git_hash()[:7],
-            CLASSES=datasets[0].CLASSES)
-    # add an attribute for visualization convenience
-    model.CLASSES = datasets[0].CLASSES
-    train_detector(
-        model,
-        datasets,
-        cfg,
-        distributed=distributed,
-        validate=(not args.no_validate),
-        timestamp=timestamp,
-        meta=meta)
-
-
-if __name__ == '__main__':
-    main()

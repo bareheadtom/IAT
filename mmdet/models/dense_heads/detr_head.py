@@ -702,6 +702,8 @@ class DETRHead(AnchorFreeHead):
         # forward of this head requires img_metas
         outs = self.forward(feats, img_metas)
         results_list = self.get_bboxes(*outs, img_metas, rescale=rescale)
+        # for boxes,labels in results_list:
+        #     print("labels",labels)
         return results_list
 
     def forward_onnx(self, feats, img_metas):
